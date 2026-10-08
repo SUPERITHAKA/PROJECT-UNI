@@ -1,0 +1,132 @@
+﻿<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Drain Adoption API</title>
+  <style>
+    :root{
+      --ink:#17313a; --muted:#687a80; --brand:#087b74; --brand-dark:#055e59;
+      --soft:#edf7f4; --line:#dce8e4; --bg:#f7faf9; --card:#fff; --ok:#20845c;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:var(--ink);
+      background:radial-gradient(circle at 90% 0%,rgba(91,190,170,.14),transparent 30%),var(--bg)}
+    .shell{width:min(1080px,calc(100% - 32px));margin:0 auto;padding:52px 0 70px}
+    .topbar{display:flex;justify-content:space-between;align-items:center;gap:20px;margin-bottom:38px}
+    .brand{display:flex;align-items:center;gap:12px}.mark{width:44px;height:44px;display:grid;place-items:center;border-radius:13px;color:#fff;background:var(--brand);font-weight:900;box-shadow:0 10px 24px rgba(8,123,116,.18)}
+    .brand strong{display:block}.brand span{display:block;margin-top:2px;color:var(--muted);font-size:.78rem}
+    .pill{display:flex;align-items:center;gap:8px;padding:8px 11px;border:1px solid var(--line);border-radius:999px;background:#fff;color:var(--muted);font-size:.78rem;font-weight:700}
+    .dot{width:9px;height:9px;border-radius:50%;background:#c0cbc8}.dot.online{background:var(--ok);box-shadow:0 0 0 4px rgba(32,132,92,.12)}
+    .hero{display:grid;grid-template-columns:1.1fr .9fr;gap:30px;align-items:end;margin-bottom:26px}
+    .kicker{display:inline-block;margin-bottom:10px;color:var(--brand);font-size:.73rem;font-weight:850;letter-spacing:.12em;text-transform:uppercase}
+    h1{margin:0;max-width:700px;font-size:clamp(2.7rem,6vw,5.2rem);line-height:.97;letter-spacing:-.06em}
+    .lead{margin:18px 0 0;max-width:650px;color:var(--muted);line-height:1.75;font-size:1.02rem}
+    .hero-card{padding:22px;border:1px solid var(--line);border-radius:18px;background:#fff;box-shadow:0 14px 34px rgba(23,49,58,.06)}
+    .hero-card small{display:block;color:var(--muted);margin-bottom:8px}.hero-card strong{font-size:2.4rem;letter-spacing:-.05em}
+    .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:26px}
+    .card{padding:20px;border:1px solid var(--line);border-radius:16px;background:var(--card)}.card span{display:block;color:var(--muted);font-size:.77rem;margin-bottom:8px}.card strong{font-size:1.55rem;letter-spacing:-.04em}
+    .section{margin-top:32px;padding:24px;border:1px solid var(--line);border-radius:18px;background:#fff}.section h2{margin:0 0 6px;font-size:1.15rem}.section p{margin:0 0 18px;color:var(--muted);font-size:.9rem;line-height:1.6}
+    .endpoint-list{display:grid;gap:9px}.endpoint{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:12px 14px;border:1px solid var(--line);border-radius:11px;text-decoration:none;color:var(--ink);background:#fbfdfc}
+    .endpoint:hover{border-color:#b9d4cd;background:var(--soft)}.method{min-width:42px;color:var(--brand-dark);font-size:.72rem;font-weight:900}code{flex:1;color:#38545b;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.82rem}.arrow{color:var(--brand);font-weight:900}
+    .drains{display:grid;gap:9px;margin-top:12px}.drain{display:flex;justify-content:space-between;gap:18px;padding:11px 0;border-bottom:1px solid #edf2f0}.drain:last-child{border-bottom:0}.drain span{color:var(--muted);font-size:.8rem}
+    .footer{margin-top:28px;color:var(--muted);font-size:.78rem;text-align:center}
+    @media(max-width:760px){.hero,.grid{grid-template-columns:1fr}.topbar{align-items:flex-start;flex-direction:column}.endpoint{align-items:flex-start}.drain{flex-direction:column;gap:4px}}
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <div class="topbar">
+      <div class="brand">
+        <div class="mark">D</div>
+        <div><strong>Drain Adoption API</strong><span>Spring Boot backend</span></div>
+      </div>
+      <div class="pill"><span id="statusDot" class="dot"></span><span id="statusText">Checking API…</span></div>
+    </div>
+
+    <section class="hero">
+      <div>
+        <span class="kicker">Backend dashboard</span>
+        <h1>The data layer behind the community.</h1>
+        <p class="lead">This server provides authentication, drain registration, adoption, comments, notifications and PostgreSQL persistence for the Drain Adoption application.</p>
+      </div>
+      <div class="hero-card"><small>Registered drains</small><strong id="totalDrains">—</strong></div>
+    </section>
+
+    <section class="grid">
+      <div class="card"><span>API server</span><strong>Port 8080</strong></div>
+      <div class="card"><span>Database</span><strong id="dbStatus">Checking…</strong></div>
+      <div class="card"><span>Available drains</span><strong id="availableDrains">—</strong></div>
+    </section>
+
+    <section class="section">
+      <h2>Quick API access</h2>
+      <p>These public endpoints can be opened directly from the browser.</p>
+      <div class="endpoint-list">
+        <a class="endpoint" href="/api/drains"><span class="method">GET</span><code>/api/drains</code><span class="arrow">→</span></a>
+        <a class="endpoint" href="/actuator/health"><span class="method">GET</span><code>/actuator/health</code><span class="arrow">→</span></a>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2>Current drain records</h2>
+      <p>Loaded live from PostgreSQL through the Spring Boot API.</p>
+      <div id="drainList" class="drains"><span style="color:#687a80">Loading records…</span></div>
+    </section>
+
+    <div class="footer">Drain Adoption Program · Local development backend</div>
+  </main>
+
+  <script>
+    async function loadDashboard() {
+      const statusDot = document.getElementById('statusDot');
+      const statusText = document.getElementById('statusText');
+      const totalDrains = document.getElementById('totalDrains');
+      const availableDrains = document.getElementById('availableDrains');
+      const dbStatus = document.getElementById('dbStatus');
+      const drainList = document.getElementById('drainList');
+
+      try {
+        const response = await fetch('/api/drains');
+        if (!response.ok) throw new Error('API unavailable');
+
+        const drains = await response.json();
+        const available = drains.filter(d => !d.adoptedByUserId).length;
+
+        statusDot.classList.add('online');
+        statusText.textContent = 'API online';
+        totalDrains.textContent = drains.length;
+        availableDrains.textContent = available;
+        dbStatus.textContent = 'Connected';
+
+        drainList.innerHTML = '';
+        if (!drains.length) {
+          drainList.innerHTML = '<span style="color:#687a80">No drains registered yet.</span>';
+          return;
+        }
+
+        drains.forEach(drain => {
+          const row = document.createElement('div');
+          row.className = 'drain';
+
+          const name = document.createElement('strong');
+          name.textContent = drain.name;
+
+          const meta = document.createElement('span');
+          meta.textContent = `${drain.latitude}, ${drain.longitude} · ${drain.adoptedByUserId ? 'Adopted' : 'Available'}`;
+
+          row.appendChild(name);
+          row.appendChild(meta);
+          drainList.appendChild(row);
+        });
+      } catch (error) {
+        statusText.textContent = 'API offline';
+        dbStatus.textContent = 'Unavailable';
+        drainList.innerHTML = '<span style="color:#bd3c3c">Could not load backend data.</span>';
+      }
+    }
+
+    loadDashboard();
+  </script>
+</body>
+</html>

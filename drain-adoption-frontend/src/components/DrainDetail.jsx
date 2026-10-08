@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+﻿import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { toast } from 'react-toastify';
@@ -107,7 +107,7 @@ const DrainDetail = () => {
       }
 
       toast.success('Drain deleted successfully');
-      navigate('/');
+      navigate('/drains');
     } catch (error) {
       toast.error(error.message);
     }
@@ -119,8 +119,8 @@ const DrainDetail = () => {
 
   return (
     <div className="drain-detail">
-      <button onClick={() => navigate('/')} className="back-button">
-        ← Back to List
+      <button onClick={() => navigate('/drains')} className="back-button">
+        â† Back to List
       </button>
       <div className="detail-header">
         <h2>{drain.name}</h2>
@@ -164,9 +164,9 @@ const DrainDetail = () => {
             Status: {
               drain.adoptedByUserId 
                 ? (user && drain.adoptedByUserId === user.userId 
-                    ? '✅ Adopted by You' 
-                    : '🔒 Adopted')
-                : '🆓 Available'
+                    ? 'âœ… Adopted by You' 
+                    : 'ðŸ”’ Adopted')
+                : 'ðŸ†“ Available'
             }
           </p>
         </div>
@@ -180,13 +180,13 @@ const DrainDetail = () => {
         )}
         {!drain.adoptedByUserId && userHasAdoptedDrain && (
           <div className="already-adopted-message">
-            <p>⚠️ You have already adopted a drain: <strong>{adoptedDrainName}</strong></p>
+            <p>âš ï¸ You have already adopted a drain: <strong>{adoptedDrainName}</strong></p>
             <p>Each user can only adopt one drain at a time.</p>
           </div>
         )}
         {drain.adoptedByUserId && user && drain.adoptedByUserId === user.userId && (
           <div className="your-drain-message">
-            <p>✅ This is your adopted drain! Keep up the great work maintaining it.</p>
+            <p>âœ… This is your adopted drain! Keep up the great work maintaining it.</p>
           </div>
         )}
       </div>

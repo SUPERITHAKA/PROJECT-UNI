@@ -1,5 +1,14 @@
-import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Link, useNavigate, useParams } from 'react-router-dom';
+﻿import React from 'react';
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  NavLink,
+  Link,
+  Navigate,
+  useNavigate,
+  useParams
+} from 'react-router-dom';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { AuthProvider, useAuth } from './context/AuthContext';
@@ -21,13 +30,10 @@ function Navigation() {
   React.useEffect(() => {
     const fetchUnreadCount = async () => {
       if (!isAdmin()) return;
-      
       try {
         const token = getToken();
         const response = await fetch(`${API_BASE_URL}/api/notifications/unread-count`, {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
+          headers: { Authorization: `Bearer ${token}` }
         });
         if (response.ok) {
           const data = await response.json();
@@ -40,49 +46,55 @@ function Navigation() {
 
     if (user && isAdmin()) {
       fetchUnreadCount();
-      // Poll every 30 seconds for new notifications
       const interval = setInterval(fetchUnreadCount, 30000);
       return () => clearInterval(interval);
     }
   }, [user, isAdmin, getToken]);
 
+  const navClass = ({ isActive }) => `nav-link${isActive ? ' active' : ''}`;
+
   const handleLogout = () => {
     logout();
-    navigate('/login');
+    navigate('/');
   };
 
   return (
     <header className="app-header">
       <div className="header-content">
-        <Link to="/" className="header-title">
-          <h1>Drain Adoption Program</h1>
+        <Link to="/" className="brand">
+          <span className="brand-mark">D</span>
+          <span className="brand-copy">
+            <strong>Drain Adoption</strong>
+            <small>Community stormwater care</small>
+          </span>
         </Link>
-        <nav className="header-nav">
+
+        <nav className="header-nav" aria-label="Main navigation">
+          <NavLink to="/" end className={navClass}>Home</NavLink>
+          <NavLink to="/drains" className={navClass}>Find Drains</NavLink>
+          {user && <NavLink to="/my-drain" className={navClass}>My Drain</NavLink>}
+          {isAdmin() && <NavLink to="/drains/new" className={navClass}>Add Drain</NavLink>}
+          {isAdmin() && (
+            <NavLink to="/notifications" className={navClass}>
+              Notifications
+              {unreadCount > 0 && <span className="notification-badge">{unreadCount}</span>}
+            </NavLink>
+          )}
+        </nav>
+
+        <div className="header-actions">
           {user ? (
             <>
-              <Link to="/drains" className="nav-link">Drains</Link>
-              {isAdmin() && (
-                <Link to="/notifications" className="notification-bell">
-                  🔔
-                  {unreadCount > 0 && (
-                    <span className="notification-badge">{unreadCount}</span>
-                  )}
-                </Link>
-              )}
-              <span className="user-info">
-                {user.name} ({user.role})
-              </span>
-              <button onClick={handleLogout} className="logout-button">
-                Logout
-              </button>
+              <span className="user-chip">{user.name || user.email}</span>
+              <button onClick={handleLogout} className="header-button ghost">Log out</button>
             </>
           ) : (
             <>
-              <Link to="/login" className="nav-link">Login</Link>
-              <Link to="/register" className="nav-link">Register</Link>
+              <Link to="/login" className="header-button ghost">Sign in</Link>
+              <Link to="/register" className="header-button primary">Create account</Link>
             </>
           )}
-        </nav>
+        </div>
       </div>
     </header>
   );
@@ -98,25 +110,71 @@ function DrainFormWrapper() {
       try {
         const response = await fetch(`${API_BASE_URL}/api/drains/${id}`);
         if (!response.ok) throw new Error('Failed to fetch drain');
-        const data = await response.json();
-        setExistingDrain(data);
+        setExistingDrain(await response.json());
       } catch (error) {
         console.error('Error fetching drain:', error);
       } finally {
         setLoading(false);
       }
     };
-
-    if (id) {
-      fetchDrain();
-    }
+    if (id) fetchDrain();
   }, [id]);
 
-  if (loading) {
-    return <div style={{ padding: '40px', textAlign: 'center' }}>Loading drain data...</div>;
+  if (loading) return <div className="page-state">Loading drain data...</div>;
+  return <DrainForm drainId={id} existingDrain={existingDrain} />;
+}
+
+function MyDrain() {
+  const { user } = useAuth();
+  const [loading, setLoading] = React.useState(true);
+  const [drain, setDrain] = React.useState(null);
+
+  React.useEffect(() => {
+    const load = async () => {
+      if (!user) {
+        setLoading(false);
+        return;
+      }
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/drains`);
+        if (!response.ok) throw new Error('Failed to load drains');
+        const drains = await response.json();
+        setDrain(drains.find((item) => String(item.adoptedByUserId) === String(user.userId)) || null);
+      } catch (error) {
+        console.error('Error loading adopted drain:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    load();
+  }, [user]);
+
+  if (!user) {
+    return (
+      <div className="empty-page">
+        <div className="empty-card">
+          <span className="empty-icon">↳</span>
+          <h1>Sign in to see your drain</h1>
+          <p>Your adopted drain will appear here after you sign in.</p>
+          <Link className="primary-action" to="/login">Sign in</Link>
+        </div>
+      </div>
+    );
   }
 
-  return <DrainForm drainId={id} existingDrain={existingDrain} />;
+  if (loading) return <div className="page-state">Finding your adopted drain...</div>;
+  if (drain) return <Navigate to={`/drains/${drain.id}`} replace />;
+
+  return (
+    <div className="empty-page">
+      <div className="empty-card">
+        <span className="empty-icon">+</span>
+        <h1>You have not adopted a drain yet</h1>
+        <p>Browse the available drains and choose one that is convenient for you to maintain.</p>
+        <Link className="primary-action" to="/drains">Find a drain</Link>
+      </div>
+    </div>
+  );
 }
 
 function App() {
@@ -129,6 +187,7 @@ function App() {
             <Routes>
               <Route path="/" element={<Home />} />
               <Route path="/drains" element={<DrainList />} />
+              <Route path="/my-drain" element={<MyDrain />} />
               <Route path="/drains/new" element={<DrainForm />} />
               <Route path="/drains/:id/edit" element={<DrainFormWrapper />} />
               <Route path="/drains/:id" element={<DrainDetail />} />
@@ -145,3 +204,4 @@ function App() {
 }
 
 export default App;
+

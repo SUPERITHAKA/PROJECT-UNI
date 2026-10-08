@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { toast } from 'react-toastify';
@@ -81,7 +81,7 @@ const DrainForm = ({ drainId, existingDrain, onSuccess }) => {
       if (onSuccess) {
         onSuccess(data);
       } else {
-        navigate('/');
+        navigate('/drains');
       }
     } catch (error) {
       toast.error(error.message);
@@ -103,8 +103,8 @@ const DrainForm = ({ drainId, existingDrain, onSuccess }) => {
   return (
     <div className="drain-form-container">
       <div className="drain-form-card">
-        <button onClick={() => navigate('/')} className="back-button">
-          ← Back to List
+        <button onClick={() => navigate('/drains')} className="back-button">
+          â† Back to List
         </button>
         <h2>{drainId ? 'Edit Drain' : 'Create New Drain'}</h2>
         <form onSubmit={handleSubmit} className="drain-form">
@@ -150,7 +150,7 @@ const DrainForm = ({ drainId, existingDrain, onSuccess }) => {
             <button 
               type="button" 
               className="cancel-button" 
-              onClick={() => navigate('/')}
+              onClick={() => navigate('/drains')}
               disabled={loading}
             >
               Cancel
@@ -163,3 +163,4 @@ const DrainForm = ({ drainId, existingDrain, onSuccess }) => {
 };
 
 export default DrainForm;
+
